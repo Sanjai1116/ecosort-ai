@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EcoSort — Smart Waste Segregation Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    --soil: #1B3A2B;
+    --soil-deep: #0F2A1D;
+    --leaf: #4C7A5E;
+    --sand: #EFE7D6;
+    --sand-warm: #E4D8BE;
+    --paper: #FAF7EF;
+    --wet: #4C7A5E;
+    --dry: #3A6EA5;
+    --ewaste: #B8862C;
+    --hazard: #A5432F;
+    --ink: #16241C;
+    --ink-soft: #4A5A50;
+    --line: rgba(22,36,28,0.14);
+    --radius: 14px;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html, body { height: auto; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #10201A;
+      --sand: #16281F;
+      --sand-warm: #1B3025;
+      --ink: #EAF0EA;
+      --ink-soft: #A9BDAF;
+      --line: rgba(234,240,234,0.14);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #10201A;
+    --sand: #16281F;
+    --sand-warm: #1B3025;
+    --ink: #EAF0EA;
+    --ink-soft: #A9BDAF;
+    --line: rgba(234,240,234,0.14);
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+  header.top {
+    background: var(--soil);
+    color: var(--sand);
+    padding: 56px 0 64px;
+  }
+  .eyebrow-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #C9D8C4;
+    margin-bottom: 22px;
+  }
+  .leafmark { width: 22px; height: 22px; flex-shrink: 0; }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(34px, 8vw, 48px);
+    line-height: 1.08;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  header.top p {
+    font-size: 17px;
+    color: #CBDAC6;
+    max-width: 46ch;
+    margin: 0 0 34px;
+  }
+
+  .lookup {
+    background: var(--soil-deep);
+    border-radius: var(--radius);
+    padding: 6px;
+    display: flex;
+    gap: 6px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .lookup input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #EFE7D6;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 14px 16px;
+  }
+  .lookup input::placeholder { color: #7E9583; }
+  .lookup button {
+    background: var(--leaf);
+    color: white;
+    border: none;
+    border-radius: 9px;
+    padding: 0 22px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .lookup button:hover { background: #5D8D6E; }
+  .lookup button:active { transform: scale(0.98); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip {
+    background: rgba(255,255,255,0.08);
+    color: #D6E3D1;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 13.5px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .chip:hover { background: rgba(255,255,255,0.15); }
+
+  main { padding: 40px 0 30px; }
+
+  #result { margin-bottom: 8px; }
+  .result-card {
+    border-radius: var(--radius);
+    padding: 26px 26px 24px;
+    border: 1.5px solid var(--line);
+    background: var(--sand);
+    animation: rise 0.28s ease both;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .badge {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 20px;
+    padding: 5px 4px;
+  }
+  .dot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
+  .result-item { color: var(--ink-soft); font-size: 14px; margin-bottom: 18px; }
+  .result-item b { color: var(--ink); font-weight: 600; }
+  .result-row { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .result-row:first-of-type { border-top: 1px solid var(--line); }
+  .result-row .k { font-size: 12.5px; color: var(--ink-soft); width: 76px; flex-shrink: 0; padding-top: 1px; }
+  .result-row .v { font-size: 15px; color: var(--ink); }
+
+  .empty-hint { color: var(--ink-soft); font-size: 14.5px; padding: 6px 2px 0; }
+
+  section.about { padding: 46px 0 8px; border-top: 1px solid var(--line); margin-top: 24px; }
+  section.about h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 24px;
+    margin: 0 0 6px;
+  }
+  section.about > p { color: var(--ink-soft); font-size: 15px; margin: 0 0 28px; max-width: 52ch; }
+
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 40px; }
+  @media (max-width: 520px) { .cat-grid { grid-template-columns: 1fr; } }
+  .cat-card {
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 18px 16px;
+  }
+  .cat-card .head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+  .cat-card h3 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 16.5px; margin: 0; }
+  .cat-card p { font-size: 13.5px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 26px 0 calc(30px + env(safe-area-inset-bottom, 0px));
+  }
+  footer p { font-size: 12.5px; color: var(--ink-soft); margin: 0; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow-row">
+      <svg class="leafmark" viewBox="0 0 24 24" fill="none">
+        <path d="M4 20C4 12 9 4 20 4C20 15 12 20 4 20Z" stroke="#8FB98E" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M4 20C8 16 13 11 20 4" stroke="#8FB98E" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span>EcoSort · AI Waste Segregation</span>
+    </div>
+    <h1>Which bin does this belong in?</h1>
+    <p>Type any item and get the right bin, the reason it belongs there, and how to dispose of it safely.</p>
+
+    <div class="lookup">
+      <input id="itemInput" type="text" placeholder="e.g. used battery, banana peel, old charger…" autocomplete="off" />
+      <button id="checkBtn">Check</button>
+    </div>
+    <div class="chips">
+      <button class="chip" data-item="Used battery">Used battery</button>
+      <button class="chip" data-item="Banana peel">Banana peel</button>
+      <button class="chip" data-item="Plastic bottle">Plastic bottle</button>
+      <button class="chip" data-item="Broken glass">Broken glass</button>
+      <button class="chip" data-item="Old charger">Old charger</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="result">
+    <p class="empty-hint">Try an item above, or pick one of the examples.</p>
+  </div>
+
+  <section class="about">
+    <h2>The four bins</h2>
+    <p>Every item on Earth falls into one of these, based on what happens to it after you throw it away.</p>
+
+    <div class="cat-grid">
+      <div class="cat-card">
+        <div class="head"><span class="dot" style="background:var(--wet)"></span><h3>Wet Waste</h3></div>
+        <p>Organic and biodegradable — food scraps, peels, garden waste. Breaks down into compost.</p>
+      </div>
+      <div class="cat-card">
+        <div class="head"><span class="dot" style="background:var(--dry)"></span><h3>Dry Waste</h3></div>
+        <p>Non-biodegradable but recyclable — plastic, paper, metal, glass. Clean before binning.</p>
+      </div>
+      <div class="cat-card">
+        <div class="head"><span class="dot" style="background:var(--ewaste)"></span><h3>E-waste</h3></div>
+        <p>Anything with a circuit, battery, or cord. Needs a dedicated e-waste collection point.</p>
+      </div>
+      <div class="cat-card">
+        <div class="head"><span class="dot" style="background:var(--hazard)"></span><h3>Hazardous</h3></div>
+        <p>Toxic, sharp, or chemical items. Never mix with regular trash — handle separately.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="about" style="padding-top:0; border-top:none; margin-top:0;">
+    <h2>How this works</h2>
+    <p>You type an item's name. The assistant matches it against waste-category knowledge and reasons out which bin it belongs to, why, and how to dispose of it — the same kind of classification and information-retrieval task an AI is well suited for, without needing a trained model.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>EcoSort AI — built for the 1M1B AI for Sustainability Virtual Internship · SDG 12: Responsible Consumption &amp; Production</p>
+  </div>
+</footer>
+
+<script>
+// ============================================
+// 🔑 PASTE YOUR GROQ API KEY BETWEEN THE QUOTES BELOW
+const GROQ_API_KEY = "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";
+// ============================================
+
+const colorMap = { wet:"var(--wet)", dry:"var(--dry)", ewaste:"var(--ewaste)", hazard:"var(--hazard)" };
+const labelMap = { wet:"Wet Waste", dry:"Dry Waste", ewaste:"E-waste", hazard:"Hazardous Waste" };
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showLoading(item) {
+  document.getElementById('result').innerHTML = `<div class="result-card">
+    <div class="result-item">Checking "<b>${escapeHtml(item)}</b>"…</div>
+  </div>`;
+}
+
+function showResult(item, cat, reason, tip) {
+  const label = labelMap[cat] || "Dry Waste";
+  const color = colorMap[cat] || colorMap.dry;
+  document.getElementById('result').innerHTML = `<div class="result-card">
+    <div class="result-top">
+      <span class="dot" style="background:${color}"></span>
+      <span class="badge" style="color:${color}">${label}</span>
+    </div>
+    <div class="result-item">for "<b>${escapeHtml(item)}</b>"</div>
+    <div class="result-row"><div class="k">Reason</div><div class="v">${escapeHtml(reason)}</div></div>
+    <div class="result-row"><div class="k">Dispose</div><div class="v">${escapeHtml(tip)}</div></div>
+  </div>`;
+}
+
+function showError(item, msg) {
+  document.getElementById('result').innerHTML = `<div class="result-card">
+    <div class="result-top"><span class="dot" style="background:#9AA79E"></span><span class="badge" style="color:var(--ink)">Error</span></div>
+    <div class="result-item">${escapeHtml(msg)}</div>
+  </div>`;
+}
+
+async function render(rawItem) {
+  const item = rawItem.trim();
+  if (!item) return;
+
+  if (!GROQ_API_KEY || GROQ_API_KEY === "PASTE_YOUR_KEY_HERE") {
+    showError(item, "API key not set. Open the code and paste your Groq API key in place of PASTE_YOUR_KEY_HERE.");
+    return;
+  }
+
+  showLoading(item);
+
+  const prompt = `You are a waste segregation classifier. Classify this item into exactly one category: wet, dry, ewaste, or hazard.
+- wet: biodegradable/organic waste
+- dry: non-biodegradable but recyclable (plastic, paper, metal, glass, textiles, furniture)
+- ewaste: anything electronic/electrical (circuit, battery, cord, plug)
+- hazard: toxic, sharp, chemical, or biohazard items
+
+Item: "${item}"
+
+Respond ONLY with strict JSON, no markdown, no extra text, in this exact shape:
+{"category":"wet","reason":"one short sentence","tip":"one short sentence"}`;
+
+  try {
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-oss-20b",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.3
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`API error ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    let text = data.choices[0].message.content;
+    text = text.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(text);
+
+    const cat = ["wet","dry","ewaste","hazard"].includes(parsed.category) ? parsed.category : "dry";
+    showResult(item, cat, parsed.reason || "", parsed.tip || "");
+  } catch (err) {
+    console.error(err);
+    showError(item, "Something went wrong calling the AI. Check your API key and internet connection.");
+  }
+}
+
+document.getElementById('checkBtn').addEventListener('click', () => {
+  render(document.getElementById('itemInput').value);
+});
+document.getElementById('itemInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') render(e.target.value);
+});
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.getElementById('itemInput').value = chip.dataset.item;
+    render(chip.dataset.item);
+  });
+});
+</script>
+</body>
+</html>
