@@ -49,5 +49,3 @@ Improves correct waste segregation at the source, reducing recyclable contaminat
 ## 👤 Author
 **Sanjai S**
 Arasu Engineering College
-
-Deployment configurationn updated.
