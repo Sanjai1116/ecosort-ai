@@ -264,7 +264,8 @@
 
 <script>
 // ============================================
-
+// 🔑 PASTE YOUR GROQ API KEY BETWEEN THE QUOTES BELOW
+const GROQ_API_KEY = "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";
 // ============================================
 
 const colorMap = { wet:"var(--wet)", dry:"var(--dry)", ewaste:"var(--ewaste)", hazard:"var(--hazard)" };
@@ -304,19 +305,57 @@ function showError(item, msg) {
 async function render(rawItem) {
   const item = rawItem.trim();
   if (!item) return;
+
+  if (!GROQ_API_KEY || GROQ_API_KEY === "PASTE_YOUR_KEY_HERE") {
+    showError(item, "API key not set. Open the code and paste your Groq API key in place of PASTE_YOUR_KEY_HERE.");
+    return;
+  }
+
   showLoading(item);
+
+  const prompt = `You are a waste segregation classifier. Classify this item into exactly one category: wet, dry, ewaste, or hazard.
+- wet: biodegradable/organic waste
+- dry: non-biodegradable but recyclable (plastic, paper, metal, glass, textiles, furniture)
+- ewaste: anything electronic/electrical (circuit, battery, cord, plug)
+- hazard: toxic, sharp, chemical, or biohazard items
+
+Item: "${item}"
+
+Respond ONLY with strict JSON, no markdown, no extra text, in this exact shape:
+{"category":"wet","reason":"one short sentence","tip":"one short sentence"}`;
+
   try {
-    const response = await fetch("/api/classify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item })
-    });
-    if (!response.ok) throw new Error("API error " + response.status);
-    const d = await response.json();
-    showResult(item, d.category, d.reason, d.tip);
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-oss-20b",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.3
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`API error ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    let text = data.choices[0].message.content;
+    text = text.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(text);
+
+    const cat = ["wet","dry","ewaste","hazard"].includes(parsed.category) ? parsed.category : "dry";
+    showResult(item, cat, parsed.reason || "", parsed.tip || "");
   } catch (err) {
     console.error(err);
-    showError(item, "Something went wrong. Try again in a moment.");
+    showError(item, "Something went wrong calling the AI. Check your API key and internet connection.");
   }
 }
 
